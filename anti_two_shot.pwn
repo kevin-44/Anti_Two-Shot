@@ -61,12 +61,6 @@ public OnPlayerDisconnect(playerid, reason)
 	return 1;
 }
 
-public OnPlayerSpawn(playerid)
-{
-	GivePlayerWeapon(playerid, WEAPON_SAWEDOFF, 500);
-	return 1;
-}
-
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(!pTwoShotting[playerid])
@@ -87,8 +81,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 					KillTimer(ptmTwoShotFreezeOver[playerid]);
 					ptmTwoShotFreezeOver[playerid] = SetTimerEx("TwoShotFreezeOver", 1500, false, "i", playerid);
 				}
-
-				printf("%d", pLastBulletAmount[playerid] - ammo);
 
 				pLastBulletAmount[playerid] = ammo;
 				pFiredSawnoff[playerid] = true;
