@@ -33,10 +33,10 @@
 
 // **** GENERAL
 
-new bool:pTwoShotting[MAX_PLAYERS] = false,
+new bool:pTwoShotting[MAX_PLAYERS],
 pLastBulletAmount[MAX_PLAYERS],
-bool:pFiredSawnoff[MAX_PLAYERS] = false,
-bool:pAttemptingTwoShot[MAX_PLAYERS] = false;
+bool:pFiredSawnoff[MAX_PLAYERS],
+bool:pAttemptingTwoShot[MAX_PLAYERS];
 
 // **** TIMERS
 
