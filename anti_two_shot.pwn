@@ -37,11 +37,15 @@
 new bool:pTwoShotting[MAX_PLAYERS] = false,
 pLastBulletAmount[MAX_PLAYERS],
 bool:pFiredSawnoff[MAX_PLAYERS] = false,
-bool:pSwitchedFromSawnoff[MAX_PLAYERS] = false;
+bool:pAttemptingTwoShot[MAX_PLAYERS] = false;
 
 // **** TIMERS
 
 new ptmTwoShotFreezeOver[MAX_PLAYERS];
+
+// **** TIMESTAMPS
+
+new ptsAttemptingToBypassSystem[MAX_PLAYERS];
 
 // ** CALLBACKS
 
@@ -67,24 +71,32 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	{
 		if(PRESSED(KEY_FIRE))
 		{
-			if(GetPlayerWeapon(playerid) == WEAPON_SAWEDOFF)
+			switch(GetPlayerWeapon(playerid))
 			{
-				new ammo = GetPlayerAmmo(playerid);
-				if(pSwitchedFromSawnoff[playerid] && (pLastBulletAmount[playerid] - ammo) == 2)
+				case WEAPON_SAWEDOFF:
 				{
-					TogglePlayerControllable(playerid, false);
+					new ammo = GetPlayerAmmo(playerid);
+					if(((gettime() - ptsAttemptingToBypassSystem[playerid]) < 2) || (pAttemptingTwoShot[playerid] && (pLastBulletAmount[playerid] - ammo) == 2))
+					{
+						TogglePlayerControllable(playerid, false);
 
-					pTwoShotting[playerid] = true;
+						pTwoShotting[playerid] = true;
 
-					GameTextForPlayer(playerid, "~r~~h~DON'T 2-SHOT!", 3000, 4);
+						GameTextForPlayer(playerid, "~r~~h~DON'T 2-SHOT!", 3000, 4);
 
-					KillTimer(ptmTwoShotFreezeOver[playerid]);
-					ptmTwoShotFreezeOver[playerid] = SetTimerEx("TwoShotFreezeOver", 1500, false, "i", playerid);
+						KillTimer(ptmTwoShotFreezeOver[playerid]);
+						ptmTwoShotFreezeOver[playerid] = SetTimerEx("TwoShotFreezeOver", 1500, false, "i", playerid);
+					}
+
+					pLastBulletAmount[playerid] = ammo;
+					pFiredSawnoff[playerid] = true;
+					pAttemptingTwoShot[playerid] = false;
 				}
-
-				pLastBulletAmount[playerid] = ammo;
-				pFiredSawnoff[playerid] = true;
-				pSwitchedFromSawnoff[playerid] = false;
+				default:
+				{
+					pAttemptingTwoShot[playerid] = false;
+					ptsAttemptingToBypassSystem[playerid] = gettime();
+				}
 			}
 		}
 	}
@@ -96,10 +108,10 @@ public OnPlayerUpdate(playerid)
 	if(pFiredSawnoff[playerid] && GetPlayerWeapon(playerid) != WEAPON_SAWEDOFF)
 	{
 		pFiredSawnoff[playerid] = false;
-		pSwitchedFromSawnoff[playerid] = true;
+		pAttemptingTwoShot[playerid] = true;
 	}
 
-	if(pSwitchedFromSawnoff[playerid])
+	if(pAttemptingTwoShot[playerid])
 	{
 		new anim_library[32], anim_name[32];
 		GetAnimationName(GetPlayerAnimationIndex(playerid), anim_library, 32, anim_name, 32);
@@ -107,7 +119,7 @@ public OnPlayerUpdate(playerid)
 		if(!strcmp(anim_name, "sawnoff_reload", true))
 		{
 			pLastBulletAmount[playerid] = GetPlayerAmmo(playerid);
-			pSwitchedFromSawnoff[playerid] = false;
+			pAttemptingTwoShot[playerid] = false;
 		}
 	}
 	return 1;
@@ -122,11 +134,15 @@ stock ResetPlayerVariables(playerid)
 	pTwoShotting[playerid] = false;
 	pLastBulletAmount[playerid] = 0;
 	pFiredSawnoff[playerid] = false;
-	pSwitchedFromSawnoff[playerid] = false;
+	pAttemptingTwoShot[playerid] = false;
 
 	// ** TIMERS
 
 	KillTimer(ptmTwoShotFreezeOver[playerid]);
+
+	// ** TIMESTAMPS
+
+	ptsAttemptingToBypassSystem[playerid] = 0;
 	return 1;
 }
 
